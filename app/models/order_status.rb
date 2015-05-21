@@ -28,10 +28,6 @@ class OrderStatus < ActiveRecord::Base
     canceled.first
   end
 
-  def self.reconciled_status
-    reconciled.first
-  end
-
   def editable?
     !!facility
   end
