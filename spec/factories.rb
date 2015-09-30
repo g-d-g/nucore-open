@@ -1,4 +1,5 @@
 require File.expand_path('factories_env', File.dirname(__FILE__))
+require File.expand_path('support/alphabetic_sequence', File.dirname(__FILE__))
 
 FactoryGirl.define do
   factory :instrument_status do
