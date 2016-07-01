@@ -15,8 +15,8 @@ RSpec.describe ReservationsController do
   before(:all) { create_users }
 
   before(:each) do
-    setup_instrument
-    setup_user_for_purchase(@guest, @price_group)
+    setup_instrument # TODO: use factories & remove this helper which is not used elsewhere
+    setup_user_for_purchase(@guest, @price_group) # TODO: use factories & remove this helper which is not used elsewhere
 
     @order = @guest.orders.create(FactoryGirl.attributes_for(:order, created_by: @guest.id, account: @account))
     @order.add(@instrument, 1)
@@ -304,7 +304,7 @@ RSpec.describe ReservationsController do
           reserve_start_date: format_usa_date(Time.zone.now.to_date - 5.days),
           reserve_start_hour: "9",
           reserve_start_min: "0",
-          reserve_start_meridian: "am",
+          reserve_start_meridian: "AM",
           duration_value: "60",
           duration_unit: "minutes",
         },
@@ -341,20 +341,25 @@ RSpec.describe ReservationsController do
     end
   end
 
-  context "create" do
-    before :each do
+  describe "POST #create" do
+    let(:reservation_params) do
+      {
+        reserve_start_date: reserve_start_at.strftime("%m/%d/%Y"),
+        reserve_start_hour: reserve_start_at.hour.to_s,
+        reserve_start_min: reserve_start_at.strftime("%M"),
+        reserve_start_meridian: reserve_start_at.strftime("%p"),
+        duration_value: "60",
+        duration_unit: "minutes",
+      }
+    end
+    let(:reserve_start_at) { Time.current.beginning_of_day + 1.day + 9.hours }
+
+    before(:each) do
       @method = :post
       @action = :create
       @params.merge!(
         order_account: @account.id,
-        reservation: {
-          reserve_start_date: format_usa_date(Time.zone.now.to_date + 1.day),
-          reserve_start_hour: "9",
-          reserve_start_min: "0",
-          reserve_start_meridian: "am",
-          duration_value: "60",
-          duration_unit: "minutes",
-        },
+        reservation: reservation_params,
       )
     end
 
@@ -367,6 +372,31 @@ RSpec.describe ReservationsController do
       expect(assigns[:order_detail].estimated_subsidy).not_to be_nil
       is_expected.to set_flash
       assert_redirected_to purchase_order_path(@order)
+    end
+
+    context "when creating and starting simultaneously" do
+      let(:reservation) { Reservation.last }
+      let(:start_at) { 2.minutes.from_now }
+      let(:reserve_start_date) { start_at.to_date }
+      let(:reserve_start_hour) { start_at.strftime("%l").strip }
+      let(:reserve_start_min) { start_at.min.to_s }
+      let(:reserve_start_meridian) { start_at.strftime("%p") }
+
+      before { sign_in @admin }
+
+      context "when the instrument is online" do
+        it "starts the reservation on creation" do
+          do_request
+          expect(reservation).to be_started
+        end
+      end
+
+      context "when the instrument is offline" do
+        it "does not start the reservation" do
+          do_request
+          expect(reservation).not_to be_started
+        end
+      end
     end
 
     context "notifications when acting as" do
@@ -493,7 +523,7 @@ RSpec.describe ReservationsController do
         expect(assigns[:reservation].reserve_start_date).to eq(format_usa_date(Time.zone.now.to_date + 1.day))
         expect(assigns[:reservation].reserve_start_hour).to eq(9)
         expect(assigns[:reservation].reserve_start_min).to eq(0)
-        expect(assigns[:reservation].reserve_start_meridian).to eq("am")
+        expect(assigns[:reservation].reserve_start_meridian).to eq("AM")
       end
       it "should assign the correct variables" do
         expect(assigns[:order]).to eq(@order)
@@ -825,7 +855,7 @@ RSpec.describe ReservationsController do
             reserve_start_date: @start.to_date,
             reserve_start_hour: "10",
             reserve_start_min: "0",
-            reserve_start_meridian: "am",
+            reserve_start_meridian: "AM",
             duration_value: "60",
             duration_unit: "minutes",
           },
