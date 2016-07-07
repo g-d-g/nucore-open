@@ -1,4 +1,5 @@
 alter profile default limit password_life_time unlimited;
+alter user system identified by new_password account unlock;
 
 CREATE USER nucore_open_development
     IDENTIFIED BY password

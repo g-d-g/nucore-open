@@ -11,8 +11,7 @@ bundle exec rake db:oracle_drop_severe
 bundle exec rake db:migrate
 
 echo "Loading test schema"
-export RAILS_ENV=test
-bundle exec rake db:oracle_drop_severe
-bundle exec rake db:schema:load
+RAILS_ENV=test bundle exec rake db:oracle_drop_severe
+RAILS_ENV=test bundle exec rake db:schema:load
 
 echo "Done!"

@@ -59,6 +59,11 @@ a minute for the server to come up, so watch the logs.
 You can access a bash shell on the container with `docker exec -i -t <container_name> bash`
 (`<container_name>` is likely something like `nucoreopen_web_1`)
 
+
+#### Importing a file
+
+imp system/oracle@//localhost:1521 FILE="$1" FROMUSER=bc_nucore TOUSER="nucore_development"
+
 ## LDAP
 
 TODO
