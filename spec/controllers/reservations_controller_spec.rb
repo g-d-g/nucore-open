@@ -351,18 +351,22 @@ RSpec.describe ReservationsController do
   end
 
   describe "POST #create" do
-    # let(:instrument) { FactoryGirl.create(:setup_instrument, facility: facility) }
     let(:reservation_params) do
       {
         reserve_start_date: reserve_start_at.strftime("%m/%d/%Y"),
         reserve_start_hour: reserve_start_at.hour.to_s,
         reserve_start_min: reserve_start_at.strftime("%M"),
         reserve_start_meridian: reserve_start_at.strftime("%p"),
-        duration_value: "60",
-        duration_unit: "minutes",
+        duration_mins: duration_mins.to_s,
+        reserve_end_date: reserve_end_at.strftime("%m/%d/%Y"),
+        reserve_end_hour: reserve_end_at.hour.to_s,
+        reserve_end_min: reserve_end_at.strftime("%M"),
+        reserve_end_meridian: reserve_end_at.strftime("%p"),
       }
     end
     let(:reserve_start_at) { Time.current.beginning_of_day + 1.day + 9.hours }
+    let(:duration_mins) { instrument.min_reserve_mins }
+    let(:reserve_end_at) { reserve_start_at + duration_mins.minutes }
 
     before(:each) do
       @method = :post
@@ -386,11 +390,7 @@ RSpec.describe ReservationsController do
 
     context "when creating and starting simultaneously" do
       let(:reservation) { Reservation.last }
-      let(:start_at) { 2.minutes.from_now }
-      let(:reserve_start_date) { start_at.to_date }
-      let(:reserve_start_hour) { start_at.strftime("%l").strip }
-      let(:reserve_start_min) { start_at.min.to_s }
-      let(:reserve_start_meridian) { start_at.strftime("%p") }
+      let(:reserve_start_at) { 1.minute.from_now.change(usec: 0) }
 
       before { sign_in @admin }
 
