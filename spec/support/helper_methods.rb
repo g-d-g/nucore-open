@@ -224,27 +224,6 @@ def setup_reservation(facility, facility_account, account, user)
   @order_detail = @order.order_details.first
 end
 
-#
-# Sets up an instrument and all the necessary environment to be ready for
-# placing reservations. Assigns the following variables:
-# - @instrument
-# - @authable (aka facility)
-# - @facility_account
-# - @price_group
-# - @rule (schedule rule)
-# - @price_group_product
-#
-def setup_instrument(instrument_options = {})
-  @instrument = FactoryGirl.create(:setup_instrument, instrument_options)
-  @facility = @authable = @instrument.facility
-  @facility_account = @instrument.facility.facility_accounts.first
-  @price_group = @instrument.price_groups.last
-  @price_policy = @instrument.price_policies.last
-  @rule = @instrument.schedule_rules.first
-  @price_group_product = @instrument.price_group_products.first
-  @instrument
-end
-
 def account_users_attributes_hash(options = {})
   options[:user] ||= @user
   options[:created_by] ||= options[:user].id
@@ -253,17 +232,6 @@ def account_users_attributes_hash(options = {})
 
   options[:user_role] ||= AccountUser::ACCOUNT_OWNER
   [Hash[options]]
-end
-
-#
-# Sets up a user with an account and as part of a price group
-# Sets the following instance variables
-# - @account
-# - @pg_member
-def setup_user_for_purchase(user, price_group)
-  @account          = FactoryGirl.create(:nufs_account, account_users_attributes: account_users_attributes_hash(user: user))
-  @pg_member        = FactoryGirl.create(:user_price_group_member, user: user, price_group: price_group)
-  create(:account_price_group_member, account: @account, price_group: PriceGroup.base.first)
 end
 
 # If you changed Settings anywhere in your spec, include this as

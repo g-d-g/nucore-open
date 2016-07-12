@@ -4,8 +4,8 @@ require "controller_spec_helper"
 RSpec.describe ReservationsController do
   include DateHelper
 
-  let(:facility) { @authable }
-  let(:instrument) { @instrument }
+  let(:facility) { instrument.facility }
+  let(:instrument) { FactoryGirl.create(:setup_instrument, :with_relay) }
   let(:order) { @order }
   let(:order_detail) { order.order_details.first }
   let(:reservation) { @reservation }
@@ -15,8 +15,17 @@ RSpec.describe ReservationsController do
   before(:all) { create_users }
 
   before(:each) do
-    setup_instrument # TODO: use factories & remove this helper which is not used elsewhere
-    setup_user_for_purchase(@guest, @price_group) # TODO: use factories & remove this helper which is not used elsewhere
+    @instrument = instrument
+    @facility = @authable = facility
+    @facility_account = facility.facility_accounts.first
+    @price_group = instrument.price_groups.last
+    @price_policy = instrument.price_policies.last
+    @rule = instrument.schedule_rules.first
+    @price_group_product = instrument.price_group_products.first
+
+    @account = FactoryGirl.create(:nufs_account, account_users_attributes: account_users_attributes_hash(user: @guest))
+    @pg_member = FactoryGirl.create(:user_price_group_member, user: @guest, price_group: @price_group)
+    FactoryGirl.create(:account_price_group_member, account: @account, price_group: PriceGroup.base.first)
 
     @order = @guest.orders.create(FactoryGirl.attributes_for(:order, created_by: @guest.id, account: @account))
     @order.add(@instrument, 1)
@@ -342,6 +351,7 @@ RSpec.describe ReservationsController do
   end
 
   describe "POST #create" do
+    # let(:instrument) { FactoryGirl.create(:setup_instrument, facility: facility) }
     let(:reservation_params) do
       {
         reserve_start_date: reserve_start_at.strftime("%m/%d/%Y"),

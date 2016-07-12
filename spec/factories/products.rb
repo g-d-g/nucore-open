@@ -105,6 +105,12 @@ FactoryGirl.define do
         product.reload
       end
     end
+
+    trait :with_relay do
+      after(:create) do |product|
+        product.relay = FactoryGirl.create(:relay_dummy, instrument: product)
+      end
+    end
   end
 
   factory :instrument_requiring_approval, parent: :setup_instrument do
