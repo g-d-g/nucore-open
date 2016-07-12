@@ -150,25 +150,31 @@ RSpec.describe Instrument do
     end
 
     describe "name updating" do
-      before :each do
-        @instrument = setup_instrument(schedule: nil)
-        @instrument2 = FactoryGirl.create(:setup_instrument, schedule: @instrument.schedule)
-        assert @instrument.schedule == @instrument2.schedule
+      let(:instrument1) { FactoryGirl.create(:setup_instrument, schedule: nil) }
+      let(:instrument2) { FactoryGirl.create(:setup_instrument, schedule: instrument1.schedule) }
+
+      before { expect(instrument1.schedule).to eq(instrument2.schedule) }
+
+      context "when updating the primary instrument's name" do
+        before { instrument1.update_attributes(name: "New Name") }
+
+        it "updates the schedule's name" do
+          expect(instrument1.schedule.reload.name).to eq("New Name Schedule")
+        end
       end
 
-      it "should update the schedule's name when updating the primary instrument's name" do
-        @instrument.update_attributes(name: "New Name")
-        expect(@instrument.schedule.reload.name).to eq("New Name Schedule")
+      it "does not call update_schedule_name if name did not change" do
+        expect(instrument1).to receive(:update_schedule_name).never
+        instrument1.update_attributes(description: "a description")
       end
 
-      it "should not call update_schedule_name if name did not change" do
-        expect(@instrument).to receive(:update_schedule_name).never
-        @instrument.update_attributes(description: "a description")
-      end
+      context "when updating the secondary instrument's name" do
+        before { instrument2.update_attributes(name: "New Name") }
 
-      it "should not update the schedule's name when updating the secondary instrument" do
-        @instrument2.update_attributes(name: "New Name")
-        expect(@instrument2.schedule.reload.name).to eq("#{@instrument.name} Schedule")
+        it "does not update the schedule's name" do
+          expect(instrument2.schedule.reload.name)
+            .to eq("#{instrument1.name} Schedule")
+        end
       end
     end
   end
